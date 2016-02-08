@@ -3,7 +3,7 @@ import six
 import textwrap
 from django import template
 from django.template import TemplateSyntaxError
-from django.template.base import parse_bits
+from django.template.library import parse_bits
 from .template import register
 
 

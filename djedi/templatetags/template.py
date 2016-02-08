@@ -2,7 +2,8 @@ from functools import partial
 from inspect import getargspec
 from django import template
 from django.template import Context
-from django.template.base import Node, TemplateSyntaxError, generic_tag_compiler
+from django.template.base import Node, TemplateSyntaxError
+from django.template.library import parse_bits
 
 register = template.Library()
 
@@ -53,10 +54,13 @@ def lazy_tag(self, func=None, takes_context=None, name=None, node_class=None):
 
         function_name = (name or
                          getattr(func, '_decorated_function', func).__name__)
-        compile_func = partial(generic_tag_compiler,
-                               params=params, varargs=varargs, varkw=varkw,
-                               defaults=defaults, name=function_name,
-                               takes_context=takes_context, node_class=node_class or SimpleNode)
+
+        def compile_func(parser, token):
+            bits = token.split_contents()[1:]
+            args, kwargs = parse_bits(parser, bits, params, varargs, varkw,
+                                      defaults, takes_context, function_name)
+            return (node_class or SimpleNode)(takes_context, args, kwargs)
+
         compile_func.__doc__ = func.__doc__
         self.tag(function_name, compile_func)
 
